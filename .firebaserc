@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "zidu-ai-20640"
-  }
+    "default": "ziduai",
+    "yes": "ziduai"
+  },
+  "targets": {},
+  "etags": {}
 }
