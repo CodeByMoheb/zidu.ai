@@ -1,6 +1,27 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+// Use a singleton pattern to ensure the instance is created only once.
+let aiInstance: GoogleGenAI | null = null;
+
+/**
+ * Lazily initializes and returns the GoogleGenAI instance.
+ * Throws a clear error if the API key is not configured.
+ */
+const getGoogleAI = (): GoogleGenAI => {
+    if (aiInstance) {
+        return aiInstance;
+    }
+
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+        // This provides a clear error instead of a blank screen crash.
+        throw new Error("API_KEY is not configured. Please ensure the environment variable is set.");
+    }
+
+    aiInstance = new GoogleGenAI({ apiKey });
+    return aiInstance;
+};
+
 
 const fileToGenerativePart = (base64: string, mimeType: string) => {
   return {
@@ -12,6 +33,7 @@ const fileToGenerativePart = (base64: string, mimeType: string) => {
 };
 
 const generateSingleImage = async (contents: any): Promise<string> => {
+    const ai = getGoogleAI();
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: contents,
@@ -38,6 +60,7 @@ export const generateMemoryHugImage = async (
   childhoodYear: string,
   currentYear: string
 ): Promise<string[]> => {
+    getGoogleAI(); // This will throw an error if the key is not set, which will be caught in the App component.
     const childhoodImagePart = fileToGenerativePart(childhoodImageBase64, childhoodImageType);
     const currentImagePart = fileToGenerativePart(currentImageBase64, currentImageType);
   
@@ -78,6 +101,7 @@ export const generateMemoryHugImage = async (
 };
 
 export const generateImageWithImagen = async (prompt: string): Promise<string[]> => {
+    const ai = getGoogleAI();
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
@@ -99,6 +123,7 @@ export const editImageWithText = async (
     imageMimeType: string,
     prompt: string
 ): Promise<string[]> => {
+    getGoogleAI();
     const imagePart = fileToGenerativePart(imageBase64, imageMimeType);
     const fullPrompt = `Analyze the uploaded image's photographic style, including its lighting, grain, and texture. Then, perform the following edit while maintaining that exact realistic style: "${prompt}"`;
 
