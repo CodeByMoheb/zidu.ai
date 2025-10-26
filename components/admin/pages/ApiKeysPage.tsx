@@ -71,7 +71,7 @@ const ApiKeysPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-white">API Key Management</h1>
         <div className="bg-gray-900 p-6 rounded-lg space-y-4">
             <h3 className="font-semibold text-lg pb-2 mb-3">Add New Key</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="password"
                   value={newKeyInput}
@@ -87,9 +87,9 @@ const ApiKeysPage: React.FC = () => {
         <div className="bg-gray-900 p-6 rounded-lg space-y-3">
              <h3 className="font-semibold text-lg pb-2 mb-3">Managed Keys</h3>
             {keys.map((key) => (
-                <div key={key} className="flex items-center justify-between bg-gray-700/50 p-3 rounded-lg text-sm">
-                    <span className="font-mono text-gray-300">{maskApiKey(key)}</span>
-                    <div className="flex items-center gap-3">
+                <div key={key} className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-700/50 p-3 rounded-lg text-sm gap-3">
+                    <span className="font-mono text-gray-300 break-all">{maskApiKey(key)}</span>
+                    <div className="flex items-center gap-3 flex-shrink-0 self-end sm:self-center">
                         {activeKey === key ? (
                             <span className="text-xs font-bold text-green-400 bg-green-900/50 px-2 py-1 rounded-full">ACTIVE</span>
                         ) : (

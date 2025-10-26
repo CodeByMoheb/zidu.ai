@@ -56,9 +56,9 @@ const LogsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h1 className="text-3xl font-bold text-white">User Generation Logs</h1>
-        <button onClick={downloadCSV} className="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+        <button onClick={downloadCSV} className="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors w-full md:w-auto">
             Download CSV
         </button>
       </div>
@@ -81,15 +81,15 @@ const LogsPage: React.FC = () => {
             <table className="w-full text-sm text-left text-gray-300">
                 <thead className="text-xs text-gray-400 uppercase bg-gray-700/50">
                     <tr>
-                        <th scope="col" className="px-6 py-3">Timestamp</th>
+                        <th scope="col" className="px-6 py-3 whitespace-nowrap">Timestamp</th>
                         <th scope="col" className="px-6 py-3">Feature</th>
-                        <th scope="col" className="px-6 py-3">User Name</th>
+                        <th scope="col" className="px-6 py-3 whitespace-nowrap">User Name</th>
                     </tr>
                 </thead>
                 <tbody>
                     {paginatedLogs.map((log, index) => (
                         <tr key={index} className="border-b border-gray-700 hover:bg-gray-800/50">
-                            <td className="px-6 py-4">{new Date(log.timestamp).toLocaleString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{new Date(log.timestamp).toLocaleString()}</td>
                             <td className="px-6 py-4 capitalize">{log.feature}</td>
                             <td className="px-6 py-4">{log.userName || 'N/A'}</td>
                         </tr>

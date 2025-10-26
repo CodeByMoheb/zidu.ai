@@ -53,13 +53,13 @@ const OverviewPage: React.FC = () => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-white">Dashboard Overview</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard title="Total Generations" value={stats.total} gradient="from-fuchsia-500 to-indigo-600" />
           <StatCard title="Memory Hugs" value={stats.hug} gradient="from-rose-500 to-pink-600" />
           <StatCard title="AI Artist" value={stats.artist} gradient="from-cyan-500 to-blue-600" />
           <StatCard title="Unique Users (Hug)" value={stats.uniqueUsers} gradient="from-amber-500 to-orange-600" />
       </div>
-      <div className="bg-gray-900 p-6 rounded-lg">
+      <div className="bg-gray-900 p-4 md:p-6 rounded-lg">
           <h2 className="text-xl font-semibold text-white mb-4">Last 7 Days Activity</h2>
           <div className="h-72">
             <BarChart data={chartData} />
