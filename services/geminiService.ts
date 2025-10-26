@@ -1,24 +1,14 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-// ====================================================================================
-// DEVELOPER INSTRUCTION: PASTE YOUR GOOGLE AI STUDIO API KEY HERE
-// You can get your key from https://aistudio.google.com/app/apikey
-const API_KEY = "YOUR_GOOGLE_AI_STUDIO_API_KEY_HERE";
-// ====================================================================================
-
-
-let ai: GoogleGenAI | null = null;
-// Initialize the client only if the API key has been changed from the placeholder
-if (API_KEY && API_KEY !== "YOUR_GOOGLE_AI_STUDIO_API_KEY_HERE") {
-    ai = new GoogleGenAI({ apiKey: API_KEY });
-}
-
-const checkClient = () => {
-    if (!ai) {
-        throw new Error("API Key is not configured. Please open 'services/geminiService.ts' and paste your API key in the 'API_KEY' constant.");
+// AI client is initialized on-demand to ensure it uses the latest configured API key.
+const getAiClient = () => {
+    // The API key is expected to be available in the environment variables.
+    // This is a secure and standard practice.
+    if (!process.env.API_KEY) {
+        throw new Error("Google AI API Key has not been configured. Please ensure it is set up correctly in the environment.");
     }
-    return ai;
-}
+    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
 
 const fileToGenerativePart = (base64: string, mimeType: string) => {
   return {
@@ -30,7 +20,7 @@ const fileToGenerativePart = (base64: string, mimeType: string) => {
 };
 
 const generateSingleImage = async (contents: any): Promise<string> => {
-    const aiClient = checkClient();
+    const aiClient = getAiClient();
     const response = await aiClient.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: contents,
@@ -98,7 +88,7 @@ export const generateMemoryHugImage = async (
 };
 
 export const generateImageWithImagen = async (prompt: string): Promise<string[]> => {
-    const aiClient = checkClient();
+    const aiClient = getAiClient();
     const response = await aiClient.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
