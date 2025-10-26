@@ -1,25 +1,35 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-// Use a singleton pattern to ensure the instance is created only once.
-let aiInstance: GoogleGenAI | null = null;
+// Use a singleton pattern that can be invalidated if the API key changes.
+let aiClient: { instance: GoogleGenAI; apiKey: string } | null = null;
+const FALLBACK_API_KEY = 'AIzaSyDb_5meg9UL9wX3tvs7DxNnSTQAYC1lenw';
 
 /**
- * Lazily initializes and returns the GoogleGenAI instance.
- * Throws a clear error if the API key is not configured.
+ * Retrieves the active API key from localStorage, or returns the fallback key.
+ */
+const getActiveApiKey = (): string => {
+    return localStorage.getItem('zidu_active_api_key') || FALLBACK_API_KEY;
+};
+
+
+/**
+ * Lazily initializes and returns the GoogleGenAI instance based on the
+ * active API key. It creates a new instance if the active key has changed.
  */
 const getGoogleAI = (): GoogleGenAI => {
-    if (aiInstance) {
-        return aiInstance;
-    }
+    const apiKey = getActiveApiKey();
 
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-        // This provides a clear error instead of a blank screen crash.
-        throw new Error("API_KEY is not configured. Please ensure the environment variable is set.");
+    // If we have an instance and its key is the current active one, return it.
+    if (aiClient && aiClient.apiKey === apiKey) {
+        return aiClient.instance;
     }
-
-    aiInstance = new GoogleGenAI({ apiKey });
-    return aiInstance;
+    
+    // Otherwise, create a new instance with the new active key.
+    console.log(`Initializing GoogleGenAI with key ending in ...${apiKey.slice(-4)}`);
+    const newInstance = new GoogleGenAI({ apiKey });
+    aiClient = { instance: newInstance, apiKey: apiKey };
+    
+    return newInstance;
 };
 
 
@@ -60,7 +70,7 @@ export const generateMemoryHugImage = async (
   childhoodYear: string,
   currentYear: string
 ): Promise<string[]> => {
-    getGoogleAI(); // This will throw an error if the key is not set, which will be caught in the App component.
+    getGoogleAI(); // Ensures client is initialized
     const childhoodImagePart = fileToGenerativePart(childhoodImageBase64, childhoodImageType);
     const currentImagePart = fileToGenerativePart(currentImageBase64, currentImageType);
   
