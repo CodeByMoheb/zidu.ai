@@ -1,0 +1,5 @@
+{
+  "name": "Zidan Memories",
+  "description": "An AI-powered application that generates emotional artwork by combining past and present photos, generates new images from text prompts, and edits existing photos with simple commands.",
+  "requestFramePermissions": []
+}
