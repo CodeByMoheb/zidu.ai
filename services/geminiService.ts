@@ -1,17 +1,23 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+// ====================================================================================
+// DEVELOPER INSTRUCTION: PASTE YOUR GOOGLE AI STUDIO API KEY HERE
+// You can get your key from https://aistudio.google.com/app/apikey
+const API_KEY = "YOUR_GOOGLE_AI_STUDIO_API_KEY_HERE";
+// ====================================================================================
 
-// Conditionally initialize the AI client.
-// This prevents the app from crashing on start-up if the API key is not set,
-// which is a common issue in local development environments.
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
-const checkApiKey = () => {
+let ai: GoogleGenAI | null = null;
+// Initialize the client only if the API key has been changed from the placeholder
+if (API_KEY && API_KEY !== "YOUR_GOOGLE_AI_STUDIO_API_KEY_HERE") {
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+}
+
+const checkClient = () => {
     if (!ai) {
-        // Provide a user-friendly error message that guides them on how to fix their local setup.
-        throw new Error("API Key is not configured. Please set up your API_KEY environment variable for local development.");
+        throw new Error("API Key is not configured. Please open 'services/geminiService.ts' and paste your API key in the 'API_KEY' constant.");
     }
+    return ai;
 }
 
 const fileToGenerativePart = (base64: string, mimeType: string) => {
@@ -24,8 +30,8 @@ const fileToGenerativePart = (base64: string, mimeType: string) => {
 };
 
 const generateSingleImage = async (contents: any): Promise<string> => {
-    checkApiKey(); // Check for the API key before making a call.
-    const response = await ai!.models.generateContent({
+    const aiClient = checkClient();
+    const response = await aiClient.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: contents,
         config: {
@@ -51,7 +57,6 @@ export const generateMemoryHugImage = async (
   childhoodYear: string,
   currentYear: string
 ): Promise<string[]> => {
-    checkApiKey(); // Check for the API key at the start of the public function.
     const childhoodImagePart = fileToGenerativePart(childhoodImageBase64, childhoodImageType);
     const currentImagePart = fileToGenerativePart(currentImageBase64, currentImageType);
   
@@ -85,7 +90,7 @@ export const generateMemoryHugImage = async (
         return await Promise.all(imagePromises);
     } catch (error) {
         console.error("Failed to generate one or more memory hug images:", error);
-        if (error instanceof Error && error.message.includes("API Key is not configured")) {
+        if (error instanceof Error) { // More robust error checking
             throw error;
         }
         throw new Error("Could not generate all image variations. Please try again.");
@@ -93,8 +98,8 @@ export const generateMemoryHugImage = async (
 };
 
 export const generateImageWithImagen = async (prompt: string): Promise<string[]> => {
-    checkApiKey();
-    const response = await ai!.models.generateImages({
+    const aiClient = checkClient();
+    const response = await aiClient.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
         config: {
@@ -115,7 +120,6 @@ export const editImageWithText = async (
     imageMimeType: string,
     prompt: string
 ): Promise<string[]> => {
-    checkApiKey();
     const imagePart = fileToGenerativePart(imageBase64, imageMimeType);
     const contents = {
         parts: [
@@ -134,7 +138,7 @@ export const editImageWithText = async (
         return await Promise.all(imagePromises);
     } catch (error) {
         console.error("Failed to generate one or more edited images:", error);
-        if (error instanceof Error && error.message.includes("API Key is not configured")) {
+         if (error instanceof Error) {
             throw error;
         }
         throw new Error("Could not generate all edited image variations. Please try again.");

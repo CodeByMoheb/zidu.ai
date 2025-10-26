@@ -39,7 +39,6 @@ const App: React.FC = () => {
     }, 2000);
   }, []);
 
-
   const handleStartEditing = async (image: { file: File, base64: string }, prompt: string) => {
     if (!image || !prompt) return;
     
