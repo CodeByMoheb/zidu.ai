@@ -1,13 +1,25 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-// AI client is initialized on-demand to ensure it uses the latest configured API key.
+// --- DEVELOPER WARNING ---
+// The following API key is hardcoded for local development convenience as requested.
+// This is NOT a secure practice for production applications.
+// For any real deployment (staging, production), you MUST use environment variables.
+// DO NOT commit this file with the key to a public repository like GitHub.
+const DEV_API_KEY = "AIzaSyDb_5meg9UL9wX3tvs7DxNnSTQAYC1lenw";
+
+
+// AI client is initialized on-demand.
 const getAiClient = () => {
-    // The API key is expected to be available in the environment variables.
-    // This is a secure and standard practice.
-    if (!process.env.API_KEY) {
-        throw new Error("Google AI API Key has not been configured. Please ensure it is set up correctly in the environment.");
+    // In a production or properly configured environment, the API_KEY from secrets is used.
+    // For local development, it falls back to the hardcoded DEV_API_KEY.
+    const apiKey = process.env.API_KEY || DEV_API_KEY;
+
+    if (!apiKey) {
+        // This error will only trigger if both the environment variable and the hardcoded key are missing.
+        throw new Error("Google AI API Key has not been configured. Please set it as a secret or in services/geminiService.ts for local development.");
     }
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    return new GoogleGenAI({ apiKey: apiKey });
 };
 
 const fileToGenerativePart = (base64: string, mimeType: string) => {
