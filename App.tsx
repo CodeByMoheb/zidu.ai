@@ -34,10 +34,21 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Simulate initial asset loading
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setIsAppLoading(false);
     }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
+
+  const handleError = (e: any) => {
+    let errorMessage = e.message || "An unknown error occurred.";
+    // Provide a more specific, helpful error for the most common configuration issue.
+    if (errorMessage.includes("API Key has not been configured")) {
+        errorMessage = "DEVELOPER: Your API Key is not configured. Please add your Google AI API key to this project's secrets to enable the application.";
+    }
+    setError(errorMessage);
+  };
 
   const handleStartEditing = async (image: { file: File, base64: string }, prompt: string) => {
     if (!image || !prompt) return;
@@ -53,7 +64,7 @@ const App: React.FC = () => {
         const result = await editImageWithText(image.base64, image.file.type, prompt);
         setEditedImages(result);
     } catch (e: any) {
-        setError(e.message || "Failed to edit the image. Please try again.");
+        handleError(e);
     } finally {
         setIsLoading(false);
     }
@@ -84,7 +95,7 @@ const App: React.FC = () => {
         );
         setGeneratedHugImages(result);
     } catch (e: any) {
-        setError(e.message || "Failed to generate image. Please try again.");
+        handleError(e);
     } finally {
         setIsLoading(false);
     }
@@ -128,6 +139,22 @@ const App: React.FC = () => {
 
   if (isAppLoading) {
     return <Preloader isVisible={true} />;
+  }
+  
+  // Centralized error display for the entire app if a critical error occurs (like API key)
+  // This prevents showing a broken UI to end-users.
+  if (error && currentPage === 'home' && error.startsWith('DEVELOPER:')) {
+    return (
+       <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col justify-center items-center p-4">
+          <Header />
+          <main className="container mx-auto px-4 py-8 text-center">
+             <div className="bg-red-900/50 border border-red-700 p-8 rounded-lg max-w-2xl mx-auto">
+                <h2 className="text-2xl font-bold text-red-300 mb-4">Application Configuration Error</h2>
+                <p className="text-red-200">{error}</p>
+             </div>
+          </main>
+       </div>
+    );
   }
 
   return (
