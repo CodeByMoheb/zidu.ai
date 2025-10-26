@@ -2,11 +2,17 @@ import { GoogleGenAI, Modality } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
 
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable is not set");
-}
+// Conditionally initialize the AI client.
+// This prevents the app from crashing on start-up if the API key is not set,
+// which is a common issue in local development environments.
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+const checkApiKey = () => {
+    if (!ai) {
+        // Provide a user-friendly error message that guides them on how to fix their local setup.
+        throw new Error("API Key is not configured. Please set up your API_KEY environment variable for local development.");
+    }
+}
 
 const fileToGenerativePart = (base64: string, mimeType: string) => {
   return {
@@ -18,7 +24,8 @@ const fileToGenerativePart = (base64: string, mimeType: string) => {
 };
 
 const generateSingleImage = async (contents: any): Promise<string> => {
-    const response = await ai.models.generateContent({
+    checkApiKey(); // Check for the API key before making a call.
+    const response = await ai!.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: contents,
         config: {
@@ -44,6 +51,7 @@ export const generateMemoryHugImage = async (
   childhoodYear: string,
   currentYear: string
 ): Promise<string[]> => {
+    checkApiKey(); // Check for the API key at the start of the public function.
     const childhoodImagePart = fileToGenerativePart(childhoodImageBase64, childhoodImageType);
     const currentImagePart = fileToGenerativePart(currentImageBase64, currentImageType);
   
@@ -77,12 +85,16 @@ export const generateMemoryHugImage = async (
         return await Promise.all(imagePromises);
     } catch (error) {
         console.error("Failed to generate one or more memory hug images:", error);
+        if (error instanceof Error && error.message.includes("API Key is not configured")) {
+            throw error;
+        }
         throw new Error("Could not generate all image variations. Please try again.");
     }
 };
 
 export const generateImageWithImagen = async (prompt: string): Promise<string[]> => {
-    const response = await ai.models.generateImages({
+    checkApiKey();
+    const response = await ai!.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
         config: {
@@ -103,6 +115,7 @@ export const editImageWithText = async (
     imageMimeType: string,
     prompt: string
 ): Promise<string[]> => {
+    checkApiKey();
     const imagePart = fileToGenerativePart(imageBase64, imageMimeType);
     const contents = {
         parts: [
@@ -121,6 +134,9 @@ export const editImageWithText = async (
         return await Promise.all(imagePromises);
     } catch (error) {
         console.error("Failed to generate one or more edited images:", error);
+        if (error instanceof Error && error.message.includes("API Key is not configured")) {
+            throw error;
+        }
         throw new Error("Could not generate all edited image variations. Please try again.");
     }
 };
