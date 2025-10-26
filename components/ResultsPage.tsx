@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { BackButton } from './BackButton';
+import ImageViewerModal from './ImageViewerModal';
 
 interface ResultsPageProps {
   isLoading: boolean;
@@ -7,35 +9,31 @@ interface ResultsPageProps {
   editedImageUrls: string[] | null;
   onGoBack: () => void;
   title: string;
-  featureName:string;
+  featureName: string;
 }
 
 const loadingMessages = [
-    "Our AI is painting your masterpiece...",
-    "This may take a moment...",
-    "Applying a touch of digital magic...",
-    "Almost there, perfecting the pixels...",
+    "Warming up the AI's imagination...",
+    "Blending pixels and emotions...",
+    "Searching for nostalgic light...",
+    "This takes a bit of time, the AI is a true artist!",
+    "Crafting your unique memory...",
 ];
 
-const ImageWithDownload: React.FC<{ url: string; index: number; featureName: string; altText: string }> = ({ url, index, featureName, altText }) => (
-    <div className="space-y-2 group relative">
-        <img src={url} alt={`${altText} ${index + 1}`} className="rounded-lg shadow-lg w-full object-cover aspect-square" />
-        <a
-            href={url}
-            download={`${featureName}-result-${index + 1}-${Date.now()}.jpg`}
-            className="absolute bottom-2 right-2 bg-green-600 text-white font-bold py-1.5 px-3 rounded-md hover:bg-green-700 transition-all text-sm opacity-0 group-hover:opacity-100 duration-300"
-            aria-label={`Download image ${index + 1}`}
-        >
-           Download
-        </a>
-    </div>
-);
+const ResultsPage: React.FC<ResultsPageProps> = ({
+  isLoading,
+  error,
+  originalImageUrl,
+  editedImageUrls,
+  onGoBack,
+  title,
+  featureName,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalStartIndex, setModalStartIndex] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
 
-
-const ResultsPage: React.FC<ResultsPageProps> = ({ isLoading, error, originalImageUrl, editedImageUrls, onGoBack, title, featureName }) => {
-  const [loadingMessage, setLoadingMessage] = React.useState(loadingMessages[0]);
-    
-  React.useEffect(() => {
+  useEffect(() => {
     if (isLoading) {
       const interval = setInterval(() => {
         setLoadingMessage(loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
@@ -43,100 +41,105 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ isLoading, error, originalIma
       return () => clearInterval(interval);
     }
   }, [isLoading]);
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-fuchsia-500 mx-auto"></div>
-          <p className="mt-4 text-lg font-semibold text-gray-300">Applying Magic...</p>
-          <p className="text-gray-400">{loadingMessage}</p>
-        </div>
-      );
-    }
-    if (error) {
-      return (
-        <div className="text-center text-red-400 space-y-4">
-          <p className="font-bold text-xl">An Error Occurred</p>
-          <p>{error}</p>
-           <button
-            onClick={onGoBack}
-            className="inline-block bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      );
-    }
-    if (editedImageUrls && editedImageUrls.length > 0) {
-        // Side-by-side view for edits
-        if (originalImageUrl) {
-            return (
-                <div className="space-y-4 w-full animate-fade-in flex flex-col h-full">
-                    <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400">{title}</h2>
-                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start overflow-y-auto">
-                        <div>
-                            <h3 className="text-center text-sm font-semibold mb-2 text-gray-400">Original</h3>
-                            <img src={originalImageUrl} alt="Original" className="rounded-lg shadow-lg w-full max-w-xs mx-auto" />
-                        </div>
-                        <div className="space-y-4">
-                            <h3 className="text-center text-sm font-semibold text-gray-400">Edited Versions</h3>
-                            <div className="grid grid-cols-2 gap-2">
-                                {editedImageUrls.map((url, index) => (
-                                <ImageWithDownload key={index} url={url} index={index} featureName={featureName} altText="Edited Artwork" />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="text-center mt-4">
-                        <button
-                            onClick={onGoBack}
-                            className="inline-block w-full sm:w-auto bg-fuchsia-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-fuchsia-700 transition-colors"
-                        >
-                            Create Another
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-        // Grid view for new generations
-        return (
-            <div className="space-y-4 w-full animate-fade-in flex flex-col h-full">
-                <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-indigo-400">{title}</h2>
-                <div className="flex-1 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 overflow-y-auto">
-                     {editedImageUrls.map((url, index) => (
-                        <ImageWithDownload key={index} url={url} index={index} featureName={featureName} altText="Generated Artwork" />
-                     ))}
-                </div>
-                <div className="text-center mt-4">
-                    <button
-                        onClick={onGoBack}
-                        className="inline-block w-full sm:w-auto bg-fuchsia-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-fuchsia-700 transition-colors"
-                    >
-                        Create Another
-                    </button>
-                </div>
-            </div>
-        );
-    }
-    
-    // Fallback for unexpected errors
-    return (
-        <div className="text-center text-gray-500">
-          <p>Something went wrong. Please go back and try again.</p>
-           <button
-            onClick={onGoBack}
-            className="mt-4 inline-block bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
-    );
+  
+  const openModal = (index: number) => {
+    setModalStartIndex(index);
+    setIsModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setIsModalOpen(false);
   };
 
+  const imagesToShow = editedImageUrls || [];
+
   return (
-    <div className="w-full bg-gray-800/50 p-4 rounded-lg shadow-inner flex flex-1 justify-center items-center">
-      {renderContent()}
+    <div className="w-full max-w-4xl mx-auto flex flex-col flex-1 animate-fade-in">
+      <BackButton onClick={onGoBack} />
+      <div className="bg-gray-800/50 p-4 md:p-6 rounded-lg flex-1 flex flex-col items-center">
+        <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-500 mb-6">
+          {title}
+        </h2>
+        
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          {/* Column for Original Image */}
+          {originalImageUrl && (
+            <div className="flex flex-col items-center animate-fade-in">
+              <h3 className="text-xl font-semibold text-gray-300 mb-4">Original</h3>
+              <div className="w-full max-w-sm aspect-square relative group">
+                <img
+                  src={originalImageUrl}
+                  alt="Original"
+                  className="rounded-lg shadow-lg w-full h-full object-cover"
+                />
+                 <button
+                    onClick={() => openModal(0)}
+                    className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    aria-label="View original image larger"
+                 >
+                    View
+                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Column for Generated Images */}
+          <div className={`flex flex-col items-center w-full ${!originalImageUrl ? 'md:col-span-2' : ''}`}>
+             <h3 className="text-xl font-semibold text-gray-300 mb-4">Your Creations</h3>
+              {isLoading && (
+                  <div className="text-center p-8 w-full flex flex-col justify-center items-center aspect-square">
+                      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-fuchsia-500 mx-auto"></div>
+                      <p className="mt-4 text-lg font-semibold text-gray-300">Generating...</p>
+                      <p className="text-gray-400">{loadingMessage}</p>
+                  </div>
+              )}
+              {error && (
+                  <div className="text-center text-red-400 p-8 w-full flex flex-col justify-center items-center aspect-square">
+                      <p className="font-bold">An error occurred</p>
+                      <p>{error}</p>
+                  </div>
+              )}
+              { !isLoading && !error && imagesToShow.length > 0 && (
+                  <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {imagesToShow.map((url, index) => (
+                          <div key={index} className="space-y-2 group relative aspect-square">
+                              <img src={url} alt={`Generated Artwork ${index + 1}`} className="rounded-lg shadow-lg w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2">
+                                  <button
+                                      onClick={() => openModal(originalImageUrl ? index + 1 : index)}
+                                      className="bg-white/20 text-white font-bold py-2 px-4 rounded-md hover:bg-white/30 transition-all text-sm"
+                                      aria-label={`View generated image ${index + 1} larger`}
+                                  >
+                                    View
+                                  </button>
+                                  <a
+                                      href={url}
+                                      download={`${featureName}-result-${index + 1}-${Date.now()}.jpg`}
+                                      className="bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-all text-sm"
+                                      aria-label={`Download image ${index + 1}`}
+                                  >
+                                    Download
+                                  </a>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              )}
+              { !isLoading && !error && imagesToShow.length === 0 && (
+                 <div className="text-center text-gray-500 p-8 w-full flex flex-col justify-center items-center aspect-square">
+                    <p>Your generated masterpieces will appear here.</p>
+                </div>
+              )}
+          </div>
+        </div>
+      </div>
+      
+      <ImageViewerModal
+        isOpen={isModalOpen}
+        images={originalImageUrl ? [originalImageUrl, ...imagesToShow] : imagesToShow}
+        startIndex={modalStartIndex}
+        onClose={closeModal}
+      />
     </div>
   );
 };

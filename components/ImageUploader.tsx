@@ -5,10 +5,11 @@ interface ImageUploaderProps {
   label: string;
   onImageUpload: (file: File | null) => void;
   previewUrl: string | null;
+  // FIX: Add optional 'small' prop to allow for different uploader sizes.
   small?: boolean;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, previewUrl, small = false }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, previewUrl, small }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,8 +35,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, pre
     }
   };
 
-  const heightClass = small ? 'h-32 md:h-48' : 'h-48 md:h-64';
-
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-gray-400 mb-2">{label}</label>
@@ -45,7 +44,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, pre
         role="button"
         tabIndex={0}
         aria-label={`Upload ${label}`}
-        className={`relative flex justify-center items-center w-full bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-fuchsia-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-fuchsia-500 ${heightClass}`}
+        // FIX: Conditionally apply styles based on the 'small' prop for different sizing.
+        className={`relative flex justify-center items-center w-full bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-fuchsia-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-fuchsia-500 ${small ? 'h-48' : 'aspect-square'}`}
       >
         <input
           type="file"

@@ -5,7 +5,9 @@ import AiArtist from './components/AiArtist';
 import PhotoMagic from './components/PhotoMagic';
 import ResultsPage from './components/ResultsPage';
 import Preloader from './components/Preloader';
-import { editImageWithText, generateMemoryHugImage } from './services/geminiService';
+import Stats from './components/Stats';
+import StatsTrigger from './components/StatsTrigger';
+import { editImageWithText, generateMemoryHugImage, generateImageWithImagen } from './services/geminiService';
 import { HeartIcon } from './components/icons/HeartIcon';
 import { PaintBrushIcon } from './components/icons/PaintBrushIcon';
 import { SparklesIcon } from './components/icons/SparklesIcon';
@@ -14,7 +16,7 @@ import { addWatermark } from './utils/imageUtils';
 type View = 'home' | 'hug' | 'artist' | 'magic' | 'results';
 
 type PageContext = {
-  type: 'edit' | 'hug' | null;
+  type: 'edit' | 'hug' | 'artist' | null;
   title: string;
   featureName: string;
 }
@@ -47,15 +49,16 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // State for Photo Magic
   const [originalImageForEdit, setOriginalImageForEdit] = useState<{ base64: string } | null>(null);
   const [editedImages, setEditedImages] = useState<string[] | null>(null);
-
-  // State for Memory Hug
   const [generatedHugImages, setGeneratedHugImages] = useState<string[] | null>(null);
+  const [artistImages, setArtistImages] = useState<string[] | null>(null);
 
   const [pageContext, setPageContext] = useState<PageContext>({ type: null, title: '', featureName: '' });
   const [isAppLoading, setIsAppLoading] = useState(true);
+  
+  const [showStats, setShowStats] = useState(false);
+  const [generationStats, setGenerationStats] = useState({ hug: 0, artist: 0, magic: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -83,6 +86,7 @@ const App: React.FC = () => {
         const result = await editImageWithText(image.base64, image.file.type, prompt);
         const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
         setEditedImages(watermarkedResult);
+        setGenerationStats(prev => ({ ...prev, magic: prev.magic + 1 }));
     } catch (e: any) {
         handleError(e);
     } finally {
@@ -115,11 +119,31 @@ const App: React.FC = () => {
         );
         const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
         setGeneratedHugImages(watermarkedResult);
+        setGenerationStats(prev => ({ ...prev, hug: prev.hug + 1 }));
     } catch (e: any) {
         handleError(e);
     } finally {
         setIsLoading(false);
     }
+  };
+  
+  const handleStartArtist = async (prompt: string) => {
+      setIsLoading(true);
+      setError(null);
+      setArtistImages(null);
+      setPageContext({ type: 'artist', title: 'Your Artwork is Ready!', featureName: 'zidu-ai-artist' });
+      setCurrentView('results');
+
+      try {
+          const result = await generateImageWithImagen(prompt);
+          const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
+          setArtistImages(watermarkedResult);
+          setGenerationStats(prev => ({ ...prev, artist: prev.artist + 1 }));
+      } catch (e: any) {
+          handleError(e);
+      } finally {
+          setIsLoading(false);
+      }
   };
 
   const handleGoHome = () => {
@@ -127,6 +151,7 @@ const App: React.FC = () => {
     setOriginalImageForEdit(null);
     setEditedImages(null);
     setGeneratedHugImages(null);
+    setArtistImages(null);
     setError(null);
     setPageContext({ type: null, title: '', featureName: '' });
   }
@@ -176,7 +201,7 @@ const App: React.FC = () => {
       case 'hug':
         return <MemoryHug onStartGenerating={handleStartMemoryHug} isGenerating={isLoading && pageContext.type === 'hug'} onBack={handleGoHome} />;
       case 'artist':
-        return <AiArtist onBack={handleGoHome} />;
+        return <AiArtist onStartGenerating={handleStartArtist} isGenerating={isLoading && pageContext.type === 'artist'} onBack={handleGoHome} />;
       case 'magic':
         return <PhotoMagic onStartEditing={handleStartEditing} isEditing={isLoading && pageContext.type === 'edit'} onBack={handleGoHome} />;
       case 'results':
@@ -184,7 +209,11 @@ const App: React.FC = () => {
             isLoading={isLoading}
             error={error}
             originalImageUrl={pageContext.type === 'edit' ? originalImageForEdit?.base64 || null : null}
-            editedImageUrls={pageContext.type === 'edit' ? editedImages : generatedHugImages}
+            editedImageUrls={
+              pageContext.type === 'edit' ? editedImages :
+              pageContext.type === 'hug' ? generatedHugImages :
+              pageContext.type === 'artist' ? artistImages : null
+            }
             onGoBack={handleGoHome}
             title={pageContext.title}
             featureName={pageContext.featureName}
@@ -204,6 +233,10 @@ const App: React.FC = () => {
       <main className="flex-1 container mx-auto px-4 py-4 md:py-8 flex flex-col">
         {renderContent()}
       </main>
+      <footer className="text-center py-2">
+         <StatsTrigger onClick={() => setShowStats(true)} />
+      </footer>
+      {showStats && <Stats stats={generationStats} onClose={() => setShowStats(false)} />}
     </div>
   );
 };
