@@ -5,7 +5,7 @@ import AiArtist from './components/AiArtist';
 import PhotoMagic from './components/PhotoMagic';
 import ResultsPage from './components/ResultsPage';
 import Preloader from './components/Preloader';
-import Stats from './components/Stats';
+import AdminDashboard from './components/admin/AdminDashboard'; // Changed import
 import StatsTrigger from './components/StatsTrigger';
 import { editImageWithText, generateMemoryHugImage, generateImageWithImagen } from './services/geminiService';
 import { HeartIcon } from './components/icons/HeartIcon';
@@ -20,6 +20,19 @@ type PageContext = {
   title: string;
   featureName: string;
 }
+
+const logGenerationEvent = (feature: 'hug' | 'artist' | 'magic', userName?: string) => {
+    try {
+        const storedLogsRaw = localStorage.getItem('zidu_user_logs') || '[]';
+        const logs = JSON.parse(storedLogsRaw);
+        const newLog = { feature, timestamp: Date.now(), userName: userName || 'N/A' };
+        logs.push(newLog);
+        localStorage.setItem('zidu_user_logs', JSON.stringify(logs));
+    } catch (error) {
+        console.error("Failed to write to user logs:", error);
+    }
+};
+
 
 const FeatureCard: React.FC<{
   icon: React.ReactNode;
@@ -57,8 +70,7 @@ const App: React.FC = () => {
   const [pageContext, setPageContext] = useState<PageContext>({ type: null, title: '', featureName: '' });
   const [isAppLoading, setIsAppLoading] = useState(true);
   
-  const [showStats, setShowStats] = useState(false);
-  const [generationStats, setGenerationStats] = useState({ hug: 0, artist: 0, magic: 0 });
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -86,7 +98,7 @@ const App: React.FC = () => {
         const result = await editImageWithText(image.base64, image.file.type, prompt);
         const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
         setEditedImages(watermarkedResult);
-        setGenerationStats(prev => ({ ...prev, magic: prev.magic + 1 }));
+        logGenerationEvent('magic');
     } catch (e: any) {
         handleError(e);
     } finally {
@@ -119,7 +131,7 @@ const App: React.FC = () => {
         );
         const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
         setGeneratedHugImages(watermarkedResult);
-        setGenerationStats(prev => ({ ...prev, hug: prev.hug + 1 }));
+        logGenerationEvent('hug', data.personName);
     } catch (e: any) {
         handleError(e);
     } finally {
@@ -138,7 +150,7 @@ const App: React.FC = () => {
           const result = await generateImageWithImagen(prompt);
           const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
           setArtistImages(watermarkedResult);
-          setGenerationStats(prev => ({ ...prev, artist: prev.artist + 1 }));
+          logGenerationEvent('artist');
       } catch (e: any) {
           handleError(e);
       } finally {
@@ -226,6 +238,10 @@ const App: React.FC = () => {
   if (isAppLoading) {
     return <Preloader isVisible={true} />;
   }
+  
+  if (showAdminDashboard) {
+    return <AdminDashboard onClose={() => setShowAdminDashboard(false)} />;
+  }
 
   return (
     <div className="h-full flex flex-col bg-gray-900 text-gray-100 font-sans">
@@ -234,9 +250,8 @@ const App: React.FC = () => {
         {renderContent()}
       </main>
       <footer className="text-center py-2">
-         <StatsTrigger onClick={() => setShowStats(true)} />
+         <StatsTrigger onClick={() => setShowAdminDashboard(true)} />
       </footer>
-      {showStats && <Stats stats={generationStats} onClose={() => setShowStats(false)} />}
     </div>
   );
 };
