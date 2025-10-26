@@ -6,18 +6,43 @@ import PhotoMagic from './components/PhotoMagic';
 import ResultsPage from './components/ResultsPage';
 import Preloader from './components/Preloader';
 import { editImageWithText, generateMemoryHugImage } from './services/geminiService';
+import { HeartIcon } from './components/icons/HeartIcon';
+import { PaintBrushIcon } from './components/icons/PaintBrushIcon';
+import { SparklesIcon } from './components/icons/SparklesIcon';
+import { addWatermark } from './utils/imageUtils';
 
-type Tab = 'hug' | 'artist' | 'magic';
-type Page = 'home' | 'results';
+type View = 'home' | 'hug' | 'artist' | 'magic' | 'results';
+
 type PageContext = {
   type: 'edit' | 'hug' | null;
   title: string;
   featureName: string;
 }
 
+const FeatureCard: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+  gradient: string;
+}> = ({ icon, title, description, onClick, gradient }) => (
+  <button
+    onClick={onClick}
+    className={`w-full text-left p-6 rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-white/50 bg-gradient-to-br ${gradient} shadow-lg`}
+  >
+    <div className="flex items-start gap-4">
+      <div className="bg-white/10 p-3 rounded-lg">{icon}</div>
+      <div>
+        <h3 className="text-xl font-bold text-white">{title}</h3>
+        <p className="text-gray-200 mt-1">{description}</p>
+      </div>
+    </div>
+  </button>
+);
+
+
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('hug');
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentView, setCurrentView] = useState<View>('home');
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,21 +58,15 @@ const App: React.FC = () => {
   const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial asset loading
     const timer = setTimeout(() => {
       setIsAppLoading(false);
-    }, 2000);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, []);
 
   const handleError = (e: any) => {
-    let errorMessage = e.message || "An unknown error occurred.";
-    // Provide a more specific, helpful error for the most common configuration issue.
-    if (errorMessage.includes("API Key has not been configured")) {
-        errorMessage = "DEVELOPER: Your API Key is not configured. Please add your Google AI API key to this project's secrets to enable the application.";
-    }
-    setError(errorMessage);
+    setError(e.message || "An unknown error occurred.");
   };
 
   const handleStartEditing = async (image: { file: File, base64: string }, prompt: string) => {
@@ -58,11 +77,12 @@ const App: React.FC = () => {
     setOriginalImageForEdit({ base64: image.base64 });
     setEditedImages(null);
     setPageContext({ type: 'edit', title: 'Your Magic is Ready!', featureName: 'zidu-ai-edit' });
-    setCurrentPage('results');
+    setCurrentView('results');
 
     try {
         const result = await editImageWithText(image.base64, image.file.type, prompt);
-        setEditedImages(result);
+        const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
+        setEditedImages(watermarkedResult);
     } catch (e: any) {
         handleError(e);
     } finally {
@@ -81,7 +101,7 @@ const App: React.FC = () => {
     setError(null);
     setGeneratedHugImages(null);
     setPageContext({ type: 'hug', title: 'Your Memory Hug is Ready!', featureName: 'zidu-ai-hug' });
-    setCurrentPage('results');
+    setCurrentView('results');
     
     try {
         const result = await generateMemoryHugImage(
@@ -93,7 +113,8 @@ const App: React.FC = () => {
             data.childhoodYear,
             data.currentYear
         );
-        setGeneratedHugImages(result);
+        const watermarkedResult = await Promise.all(result.map(img => addWatermark(img)));
+        setGeneratedHugImages(watermarkedResult);
     } catch (e: any) {
         handleError(e);
     } finally {
@@ -101,9 +122,8 @@ const App: React.FC = () => {
     }
   };
 
-
   const handleGoHome = () => {
-    setCurrentPage('home');
+    setCurrentView('home');
     setOriginalImageForEdit(null);
     setEditedImages(null);
     setGeneratedHugImages(null);
@@ -111,69 +131,56 @@ const App: React.FC = () => {
     setPageContext({ type: null, title: '', featureName: '' });
   }
 
-  const TabButton: React.FC<{ tab: Tab; label: string }> = ({ tab, label }) => (
-    <button
-      onClick={() => setActiveTab(tab)}
-      className={`px-4 py-2 text-sm md:text-base font-semibold rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-fuchsia-500 ${
-        activeTab === tab
-          ? 'bg-fuchsia-600 text-white shadow-lg'
-          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-      }`}
-    >
-      {label}
-    </button>
+  const renderHomeView = () => (
+    <div className="flex flex-col justify-center items-center h-full text-center animate-fade-in p-4">
+      <div className="w-full max-w-2xl space-y-8">
+        <div>
+           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-purple-500 to-cyan-500">
+            Unlock Your Visual Imagination
+          </h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-400">
+            Choose a tool to begin your creative journey.
+          </p>
+        </div>
+        <div className="space-y-4">
+            <FeatureCard
+                title="Memory Hug"
+                description="Merge past and present into one emotional image."
+                icon={<HeartIcon className="h-8 w-8 text-rose-300"/>}
+                onClick={() => setCurrentView('hug')}
+                gradient="from-rose-500/80 to-pink-600/80"
+            />
+            <FeatureCard
+                title="AI Artist"
+                description="Turn your words into stunning, original artwork."
+                icon={<PaintBrushIcon className="h-8 w-8 text-cyan-300"/>}
+                onClick={() => setCurrentView('artist')}
+                gradient="from-cyan-500/80 to-blue-600/80"
+            />
+            <FeatureCard
+                title="Photo Magic"
+                description="Edit your photos with simple text commands."
+                icon={<SparklesIcon className="h-8 w-8 text-amber-300"/>}
+                onClick={() => setCurrentView('magic')}
+                gradient="from-amber-500/80 to-orange-600/80"
+            />
+        </div>
+      </div>
+    </div>
   );
 
-  const renderTabContent = () => {
-    switch (activeTab) {
+  const renderContent = () => {
+    switch(currentView) {
+      case 'home':
+        return renderHomeView();
       case 'hug':
-        return <MemoryHug onStartGenerating={handleStartMemoryHug} isGenerating={isLoading && pageContext.type === 'hug'} />;
+        return <MemoryHug onStartGenerating={handleStartMemoryHug} isGenerating={isLoading && pageContext.type === 'hug'} onBack={handleGoHome} />;
       case 'artist':
-        return <AiArtist />;
+        return <AiArtist onBack={handleGoHome} />;
       case 'magic':
-        return <PhotoMagic onStartEditing={handleStartEditing} isEditing={isLoading && pageContext.type === 'edit'} />;
-      default:
-        return <MemoryHug onStartGenerating={handleStartMemoryHug} isGenerating={isLoading && pageContext.type === 'hug'} />;
-    }
-  };
-
-  if (isAppLoading) {
-    return <Preloader isVisible={true} />;
-  }
-  
-  // Centralized error display for the entire app if a critical error occurs (like API key)
-  // This prevents showing a broken UI to end-users.
-  if (error && currentPage === 'home' && error.startsWith('DEVELOPER:')) {
-    return (
-       <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col justify-center items-center p-4">
-          <Header />
-          <main className="container mx-auto px-4 py-8 text-center">
-             <div className="bg-red-900/50 border border-red-700 p-8 rounded-lg max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold text-red-300 mb-4">Application Configuration Error</h2>
-                <p className="text-red-200">{error}</p>
-             </div>
-          </main>
-       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 font-sans animate-fade-in">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        {currentPage === 'home' ? (
-          <>
-            <div className="flex justify-center space-x-2 md:space-x-4 mb-8 bg-gray-800 p-2 rounded-lg shadow-md max-w-lg mx-auto">
-              <TabButton tab="hug" label="Memory Hug" />
-              <TabButton tab="artist" label="AI Artist" />
-              <TabButton tab="magic" label="Photo Magic" />
-            </div>
-            <div className="w-full max-w-5xl mx-auto">
-              {renderTabContent()}
-            </div>
-          </>
-        ) : (
-          <ResultsPage
+        return <PhotoMagic onStartEditing={handleStartEditing} isEditing={isLoading && pageContext.type === 'edit'} onBack={handleGoHome} />;
+      case 'results':
+        return <ResultsPage
             isLoading={isLoading}
             error={error}
             originalImageUrl={pageContext.type === 'edit' ? originalImageForEdit?.base64 || null : null}
@@ -181,8 +188,21 @@ const App: React.FC = () => {
             onGoBack={handleGoHome}
             title={pageContext.title}
             featureName={pageContext.featureName}
-          />
-        )}
+          />;
+      default:
+        return renderHomeView();
+    }
+  }
+
+  if (isAppLoading) {
+    return <Preloader isVisible={true} />;
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-gray-900 text-gray-100 font-sans">
+      <Header />
+      <main className="flex-1 container mx-auto px-4 py-4 md:py-8 flex flex-col">
+        {renderContent()}
       </main>
     </div>
   );

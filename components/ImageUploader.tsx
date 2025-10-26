@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { UploadIcon } from './icons/UploadIcon';
 
@@ -6,9 +5,10 @@ interface ImageUploaderProps {
   label: string;
   onImageUpload: (file: File | null) => void;
   previewUrl: string | null;
+  small?: boolean;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, previewUrl }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, previewUrl, small = false }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,6 +34,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, pre
     }
   };
 
+  const heightClass = small ? 'h-32 md:h-48' : 'h-48 md:h-64';
+
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-gray-400 mb-2">{label}</label>
@@ -43,7 +45,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, pre
         role="button"
         tabIndex={0}
         aria-label={`Upload ${label}`}
-        className="relative flex justify-center items-center w-full h-48 md:h-64 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-fuchsia-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-fuchsia-500"
+        className={`relative flex justify-center items-center w-full bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-fuchsia-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-fuchsia-500 ${heightClass}`}
       >
         <input
           type="file"
@@ -67,8 +69,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ label, onImageUpload, pre
           </>
         ) : (
           <div className="text-center text-gray-500 pointer-events-none">
-            <UploadIcon className="mx-auto h-12 w-12" />
-            <p className="mt-2">Click or press Enter to upload</p>
+            <UploadIcon className="mx-auto h-10 w-10" />
+            <p className="mt-2 text-sm">Click or press Enter to upload</p>
           </div>
         )}
       </div>

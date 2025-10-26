@@ -7,7 +7,7 @@ interface ResultsPageProps {
   editedImageUrls: string[] | null;
   onGoBack: () => void;
   title: string;
-  featureName: string;
+  featureName:string;
 }
 
 const loadingMessages = [
@@ -72,43 +72,43 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ isLoading, error, originalIma
         // Side-by-side view for edits
         if (originalImageUrl) {
             return (
-                <div className="space-y-6 w-full animate-fade-in">
-                <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400">{title}</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                    <div>
-                        <h3 className="text-center font-semibold mb-2 text-gray-400">Original</h3>
-                        <img src={originalImageUrl} alt="Original" className="rounded-lg shadow-lg w-full" />
-                    </div>
-                    <div className="space-y-4">
-                        <h3 className="text-center font-semibold text-gray-400">Edited Versions</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {editedImageUrls.map((url, index) => (
-                               <ImageWithDownload key={index} url={url} index={index} featureName={featureName} altText="Edited Artwork" />
-                            ))}
+                <div className="space-y-4 w-full animate-fade-in flex flex-col h-full">
+                    <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400">{title}</h2>
+                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start overflow-y-auto">
+                        <div>
+                            <h3 className="text-center text-sm font-semibold mb-2 text-gray-400">Original</h3>
+                            <img src={originalImageUrl} alt="Original" className="rounded-lg shadow-lg w-full max-w-xs mx-auto" />
+                        </div>
+                        <div className="space-y-4">
+                            <h3 className="text-center text-sm font-semibold text-gray-400">Edited Versions</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {editedImageUrls.map((url, index) => (
+                                <ImageWithDownload key={index} url={url} index={index} featureName={featureName} altText="Edited Artwork" />
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="text-center">
-                    <button
-                        onClick={onGoBack}
-                        className="inline-block w-full sm:w-auto bg-fuchsia-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-fuchsia-700 transition-colors"
-                    >
-                        Create Another
-                    </button>
-                </div>
+                    <div className="text-center mt-4">
+                        <button
+                            onClick={onGoBack}
+                            className="inline-block w-full sm:w-auto bg-fuchsia-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-fuchsia-700 transition-colors"
+                        >
+                            Create Another
+                        </button>
+                    </div>
                 </div>
             );
         }
         // Grid view for new generations
         return (
-            <div className="space-y-6 w-full animate-fade-in">
+            <div className="space-y-4 w-full animate-fade-in flex flex-col h-full">
                 <h2 className="text-3xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-indigo-400">{title}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex-1 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 overflow-y-auto">
                      {editedImageUrls.map((url, index) => (
                         <ImageWithDownload key={index} url={url} index={index} featureName={featureName} altText="Generated Artwork" />
                      ))}
                 </div>
-                <div className="text-center">
+                <div className="text-center mt-4">
                     <button
                         onClick={onGoBack}
                         className="inline-block w-full sm:w-auto bg-fuchsia-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-fuchsia-700 transition-colors"
@@ -135,7 +135,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ isLoading, error, originalIma
   };
 
   return (
-    <div className="w-full bg-gray-800/50 p-4 sm:p-8 rounded-lg shadow-inner flex justify-center items-center min-h-[70vh]">
+    <div className="w-full bg-gray-800/50 p-4 rounded-lg shadow-inner flex flex-1 justify-center items-center">
       {renderContent()}
     </div>
   );

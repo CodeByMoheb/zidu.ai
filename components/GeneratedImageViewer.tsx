@@ -48,10 +48,10 @@ const GeneratedImageViewer: React.FC<GeneratedImageViewerProps> = ({ isLoading, 
     }
     if (imageUrls && imageUrls.length > 0) {
       return (
-        <div className="space-y-4">
+        <div className="space-y-4 h-full">
             <h3 className="text-center text-xl font-semibold text-gray-300">Your AI Creations</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {imageUrls.map((url, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                {imageUrls.slice(0, 2).map((url, index) => (
                     <div key={index} className="space-y-2 group relative">
                         <img src={url} alt={`Generated Artwork ${index + 1}`} className="rounded-lg shadow-lg w-full object-cover aspect-square" />
                         <a
@@ -76,7 +76,7 @@ const GeneratedImageViewer: React.FC<GeneratedImageViewerProps> = ({ isLoading, 
   };
 
   return (
-    <div className="w-full bg-gray-800 p-4 rounded-lg shadow-inner flex justify-center items-center min-h-[30rem]">
+    <div className="w-full h-full bg-gray-800 p-4 rounded-lg shadow-inner flex justify-center items-center min-h-[10rem]">
       {renderContent()}
     </div>
   );
